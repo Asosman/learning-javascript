@@ -14,10 +14,53 @@ class DomHelper{
     }
 }
 
-class Tooltip {}
+
+class Component{
+    constructor(hostElementId, insertBefore= false){
+        if(hostElementId){
+            this.hostElement = document.getElementById(hostElementId);
+        }else{
+            this.hostElement = document.body;
+        }
+        this.insertBefore = insertBefore;
+    }
+    detach(){
+        this.element.remove();
+    }
+    
+ 
+    attach(){
+         this.hostElement.insertAdjacentElement(this.insertBefore ? 'afterbegin' : 'beforeend', this.element);
+    }
+}
+
+
+class Tooltip extends Component {
+    constructor(closeTooltipNotifierfunction){
+        super('active-projects', true);
+        this.closeTooltipNotifier = closeTooltipNotifierfunction;
+        this.create();
+    }
+
+    closeTooltip = ()=>{
+        this.detach ()
+        this.closeTooltipNotifier();
+        
+    }
+    
+    create(){
+        const tooltipElement = document.createElement('div');
+        tooltipElement.className = 'card';
+        tooltipElement.textContent = 'uche';
+        this.element = tooltipElement
+        tooltipElement.addEventListener('click',this.closeTooltip)
+
+    }
+}
 
 
 class ProjectItem {
+    hasActiveTooltip = false;
     constructor(id, updateProjectListsFunction,type) {
         this.id = id;
         this.updateProjectListsHandular = updateProjectListsFunction;
@@ -25,9 +68,25 @@ class ProjectItem {
         this.connectmoreInfoButton(type);
     }
 
-    connectmoreInfoButton() {
-
+    moreInfoHandular(){
+        if(this.hasActiveTooltip){
+            return;
+        }
+        const tooltip =  new Tooltip(() => {
+            this.hasActiveTooltip = false;
+        });
+        tooltip.attach();
+        this.hasActiveTooltip = true;
     }
+
+
+    connectmoreInfoButton() {
+        const projectItemElement = document.getElementById(this.id);
+        const moreInfoBtn = projectItemElement.querySelector('button:first-of-type');
+        moreInfoBtn.addEventListener('click',this.moreInfoHandular)
+    }
+
+
     connectSwitchButton(type) {
         const projectItemElement = document.getElementById(this.id);
         let switchbtn = projectItemElement.querySelector('button:last-of-type');
