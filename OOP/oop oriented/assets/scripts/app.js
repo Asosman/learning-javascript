@@ -1,23 +1,45 @@
+class DomHelper{
+
+    static clearEventListners(element){
+        const clonedElemnent = element.cloneNode(true);
+        element.replaceWith(clonedElemnent);
+        return clonedElemnent;
+    }
+
+    static moveElement(elementId,destinationSelector){
+        const element = document.getElementById(elementId);
+        const destination = document.querySelector(destinationSelector);
+
+        destination.append(element);
+    }
+}
+
 class Tooltip {}
 
 
 class ProjectItem {
-    constructor(id, updateProjectListsFunction) {
+    constructor(id, updateProjectListsFunction,type) {
         this.id = id;
         this.updateProjectListsHandular = updateProjectListsFunction;
         this.connectSwitchButton();
-        this.connectmoreInfoButton();
+        this.connectmoreInfoButton(type);
     }
 
     connectmoreInfoButton() {
 
     }
-    connectSwitchButton() {
+    connectSwitchButton(type) {
         const projectItemElement = document.getElementById(this.id);
-        const switchbtn = projectItemElement.querySelector('button:last-of-type');
-        switchbtn.addEventListener('click', this.updateProjectListsHandular);
+        let switchbtn = projectItemElement.querySelector('button:last-of-type');
+        switchbtn = DomHelper.clearEventListners(switchbtn);
+        switchbtn.textContent = type === 'active' ? 'finished':'activate';
+        switchbtn.addEventListener('click', this.updateProjectListsHandular.bind(null,this.id));
     }
 
+    update(updateprojectfn, type){
+        this.updateProjectListsHandular = updateprojectfn
+        this.connectSwitchButton(type);
+    }
 }
 
 
@@ -29,7 +51,7 @@ class ProjectList {
         const projItems = document.querySelectorAll(`#${type}-projects li`);
 
         for (const projItem of projItems) {
-            this.projects.push(new ProjectItem(projItem.id, this.switchProject.bind(this)))
+            this.projects.push(new ProjectItem(projItem.id, this.switchProject.bind(this),this.type))
         }
         console.log(this.projects)
 
@@ -39,8 +61,11 @@ class ProjectList {
         this.switchHandularFunction = switchHandularFunction;
     }
 
-    addProject() {
+    addProject(project) {
         console.log(this);
+        this.projects.push(project);
+        DomHelper.moveElement(project.id,`#${this.type}-projects ul`);
+        project.update(this.switchProject.bind(this), this.type)
     }
 
     switchProject(projectId) {
